@@ -634,7 +634,9 @@ class StarCraft2Env(MultiAgentEnv):
             self.colossus_id: 24,
             self.hydralisk_id: 10,
             self.zergling_id: 11,
-            self.baneling_id: 1
+            self.baneling_id: 1,
+            self.overseer_id: 10, # todo fix
+            self.ultralisk_id: 10, # todo fix
         }
         return switcher.get(unit.unit_type, 15)
 
@@ -654,6 +656,8 @@ class StarCraft2Env(MultiAgentEnv):
             return 50  # Protoss's Zaelot
         if unit.unit_type == 4 or unit.unit_type == self.colossus_id:
             return 150  # Protoss's Colossus
+        if unit.unit_type == 76 or unit.unit_type == self.dark_templar_id:
+            return 80  # Protoss's Dark Templar
 
     def can_move(self, unit, direction):
         """Whether a unit can move in a given direction."""
@@ -1048,19 +1052,19 @@ class StarCraft2Env(MultiAgentEnv):
     def get_unit_type_id(self, unit, ally):
         """Returns the ID of unit type in the given scenario."""
         if ally:  # use new SC2 unit types
-            type_id = unit.unit_type - self._min_unit_type
+            if self.map_type == "overseer_ultralisk_and_dark_templar":
+                # ultralisk_rl
+                if unit.unit_type == self.ultralisk_id:
+                    type_id = 0
+                # overseer_rl
+                elif unit.unit_type == self.overseer_id:
+                    type_id = 1
+            else:
+                type_id = unit.unit_type - self._min_unit_type
         else:  # use default SC2 unit types
             if self.map_type == "stalkers_and_zealots":
                 # id(Stalker) = 74, id(Zealot) = 73
                 type_id = unit.unit_type - 73
-            elif self.map_type == "colossi_stalkers_zealots":
-                # id(Stalker) = 74, id(Zealot) = 73, id(Colossus) = 4
-                if unit.unit_type == 4:
-                    type_id = 0
-                elif unit.unit_type == 74:
-                    type_id = 1
-                else:
-                    type_id = 2
             elif self.map_type == "bane":
                 if unit.unit_type == 9:
                     type_id = 0
@@ -1073,6 +1077,9 @@ class StarCraft2Env(MultiAgentEnv):
                     type_id = 1
                 else:
                     type_id = 2
+            elif self.map_type == "overseer_ultralisk_and_dark_templar":
+                # dark templar
+                type_id = 0
 
         return type_id
 
@@ -1283,6 +1290,9 @@ class StarCraft2Env(MultiAgentEnv):
         elif self.map_type == "bane":
             self.baneling_id = min_unit_type
             self.zergling_id = min_unit_type + 1
+        elif self.map_type == "overseer_ultralisk_and_dark_templar":
+            self.overseer_id = min_unit_type
+            self.ultralisk_id = min_unit_type + 1
 
     def only_medivac_left(self, ally):
         """Check if only Medivac units are left."""
