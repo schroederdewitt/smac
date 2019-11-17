@@ -94,6 +94,7 @@ class StarCraft2Env(MultiAgentEnv):
         window_size_x=1920,
         window_size_y=1200,
         heuristic_ai=False,
+        discretize_actions=False,
         debug=False,
     ):
         """
@@ -237,6 +238,7 @@ class StarCraft2Env(MultiAgentEnv):
         self.n_actions_no_attack = 6
         self.n_actions_move = 4
         self.n_actions = self.n_actions_no_attack + self.n_enemies
+        self.discretize_actions = discretize_actions
 
         # Map info
         self._agent_race = map_params["a_race"]
@@ -388,7 +390,11 @@ class StarCraft2Env(MultiAgentEnv):
 
     def step(self, actions):
         """A single environment step. Returns reward, terminated, info."""
-        actions = [int(a) for a in actions]
+
+        if self.discretize_actions:
+            actions = [int(np.argmax(a)) for a in actions]
+        else:
+            actions = [int(a) for a in actions]
 
         self.last_action = np.eye(self.n_actions)[np.array(actions)]
 
