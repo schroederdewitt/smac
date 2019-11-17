@@ -22,6 +22,8 @@ from s2clientprotocol import sc2api_pb2 as sc_pb
 from s2clientprotocol import raw_pb2 as r_pb
 from s2clientprotocol import debug_pb2 as d_pb
 
+from gym.spaces import Box
+
 races = {
     "R": sc_common.Random,
     "P": sc_common.Protoss,
@@ -1384,3 +1386,17 @@ class StarCraft2Env(MultiAgentEnv):
             "restarts": self.force_restarts,
         }
         return stats
+
+    def get_env_info(self):
+        action_spaces = tuple([Box(np.array([0.0] * self.n_actions),
+                                   np.array([1.0] * self.n_actions)) for _ in range(self.n_agents)])
+        env_info = {"state_shape": self.get_state_size(),
+                    "obs_shape": self.get_obs_size(),
+                    "n_actions": self.get_total_actions(),
+                    "n_agents": self.n_agents,
+                    "episode_limit": self.episode_limit,
+                    "action_spaces": action_spaces,
+                    "actions_dtype": np.float32,
+                    "normalise_actions": False
+                    }
+        return env_info
